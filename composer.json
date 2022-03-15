@@ -1,0 +1,24 @@
+{
+    "name": "initphp/encryption",
+    "description": "PHP OpenSSL/Sodium Encryption and Decryption",
+    "type": "library",
+    "license": "MIT",
+    "autoload": {
+        "psr-4": {
+            "InitPHP\\Encryption\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Muhammet ŞAFAK",
+            "email": "info@muhammetsafak.com.tr",
+            "role": "Developer",
+            "homepage": "https://www.muhammetsafak.com.tr"
+        }
+    ],
+    "minimum-stability": "stable",
+    "require": {
+        "php": ">=7.4",
+        "ext-mbstring": "*"
+    }
+}

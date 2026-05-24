@@ -1,92 +1,169 @@
 <?php
-/**
- * Sodium.php
- *
- * This file is part of InitPHP.
- *
- * @author     Muhammet ŞAFAK <info@muhammetsafak.com.tr>
- * @copyright  Copyright © 2022 InitPHP
- * @license    http://initphp.github.io/license.txt  MIT
- * @version    1.0
- * @link       https://www.muhammetsafak.com.tr
- */
 
 declare(strict_types=1);
 
 namespace InitPHP\Encryption;
 
-use \InitPHP\Encryption\Exceptions\EncryptionException;
+use InitPHP\Encryption\Exceptions\EncryptionException;
+use SodiumException;
 
-use const SODIUM_CRYPTO_SECRETBOX_NONCEBYTES;
-use const SODIUM_CRYPTO_SECRETBOX_MACBYTES;
-
-use function extension_loaded;
-use function bin2hex;
-use function hex2bin;
-use function serialize;
-use function unserialize;
-use function random_bytes;
-use function mb_strlen;
-use function sodium_pad;
-use function sodium_crypto_secretbox;
-use function sodium_memzero;
-use function sodium_crypto_secretbox_open;
-use function sodium_unpad;
-
-class Sodium extends BaseHandler implements HandlerInterface
+/**
+ * Encrypts and decrypts arbitrary PHP values with libsodium's
+ * crypto_secretbox AEAD construction.
+ *
+ * Ciphertext layout (binary, then hex-encoded):
+ *
+ *     [1B VERSION] [1B SERIALIZER] [24B NONCE] [... secretbox (MAC || ciphertext) ...]
+ *
+ * - VERSION is {@see BaseHandler::FORMAT_VERSION} (0x02).
+ * - SERIALIZER is the serializer flag chosen at encrypt time.
+ * - The user-supplied "key" option may be of any non-empty length; it is
+ *   passed through {@see sodium_crypto_generichash()} to obtain a
+ *   SODIUM_CRYPTO_SECRETBOX_KEYBYTES-byte derived key. The derived key never
+ *   leaves this handler and is wiped from memory in a finally block.
+ *
+ * @phpstan-import-type EncryptionOptions from BaseHandler
+ */
+final class Sodium extends BaseHandler
 {
-
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @phpstan-param EncryptionOptions $options
+     *
+     * @throws EncryptionException If the sodium extension is not loaded.
+     */
     public function __construct(array $options = [])
     {
-        if(extension_loaded('sodium') === FALSE){
-            throw new \InitPHP\Encryption\Exceptions\EncryptionException('The "sodium" extension must be installed.');
+        if (!\extension_loaded('sodium')) {
+            throw new EncryptionException('The "sodium" extension is required by the Sodium handler.');
         }
         parent::__construct($options);
     }
 
     /**
-     * @param $data
-     * @param array $options
-     * @return string
-     * @throws \SodiumException
-     * @throws \Exception
+     * @param array<string, mixed> $options
+     *
+     * @phpstan-param EncryptionOptions $options
+     *
+     * @throws EncryptionException If configuration is invalid or libsodium fails.
      */
-    public function encrypt($data, array $options = []): string
+    public function encrypt(mixed $data, array $options = []): string
     {
-        $options = $this->options($options);
-        $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
-        $data = serialize($data);
-        $data = sodium_pad($data, (int)$options['blocksize']);
-        $ciphertext = $nonce . sodium_crypto_secretbox($data, $nonce, $options['key']);
-        sodium_memzero($data);
-        sodium_memzero($options['key']);
-        return bin2hex($ciphertext);
+        $options = $this->resolveOptions($options);
+        $userKey = $this->requireKey($options);
+        $blocksize = $this->resolveBlocksize($options);
+        $serializerFlag = $this->serializerFlag($options);
+
+        $payload = $this->serializePayload($data, $serializerFlag);
+
+        $secret = $this->deriveKey($userKey);
+
+        try {
+            try {
+                $padded = sodium_pad($payload, $blocksize);
+            } catch (SodiumException $e) {
+                throw new EncryptionException('Sodium padding failed: ' . $e->getMessage(), 0, $e);
+            }
+
+            $nonce = random_bytes(SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+            $box = sodium_crypto_secretbox($padded, $nonce, $secret);
+
+            $header = \chr(self::FORMAT_VERSION) . \chr($serializerFlag);
+
+            return bin2hex($header . $nonce . $box);
+        } finally {
+            sodium_memzero($secret);
+        }
     }
 
     /**
-     * @param $data
-     * @param array $options
-     * @return mixed
-     * @throws EncryptionException
-     * @throws \SodiumException
+     * @param array<string, mixed> $options
+     *
+     * @phpstan-param EncryptionOptions $options
+     *
+     * @throws EncryptionException If the ciphertext is malformed, the format
+     *                             version is unsupported, authentication fails,
+     *                             or unpadding/deserialization fails.
      */
-    public function decrypt($data, array $options = [])
+    public function decrypt(string $data, array $options = []): mixed
     {
-        $options = $this->options($options);
-        $data = hex2bin($data);
-        if(mb_strlen($data, '8bit') < (SODIUM_CRYPTO_SECRETBOX_NONCEBYTES + SODIUM_CRYPTO_SECRETBOX_MACBYTES)){
-            throw new EncryptionException('Decryption failed!');
-        }
-        $nonce = $this->substr($data, 0, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
-        $ciphertext = $this->substr($data, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+        $options = $this->resolveOptions($options);
+        $userKey = $this->requireKey($options);
+        $blocksize = $this->resolveBlocksize($options);
 
-        if(($data = sodium_crypto_secretbox_open($ciphertext, $nonce, $options['key'])) === FALSE){
-            throw new EncryptionException('Decryption failed!');
+        $binary = @hex2bin($data);
+        if ($binary === false) {
+            throw new EncryptionException('Ciphertext is not valid hex-encoded data.');
         }
-        $data = sodium_unpad($data, $options['blocksize']);
-        sodium_memzero($ciphertext);
-        sodium_memzero($options['key']);
-        return unserialize($data);
+
+        $minLength = 2 + SODIUM_CRYPTO_SECRETBOX_NONCEBYTES + SODIUM_CRYPTO_SECRETBOX_MACBYTES;
+        if (\strlen($binary) < $minLength) {
+            throw new EncryptionException('Ciphertext is too short to contain a v2 Sodium payload.');
+        }
+
+        $version = \ord($binary[0]);
+        if ($version !== self::FORMAT_VERSION) {
+            throw new EncryptionException(\sprintf(
+                'Unsupported ciphertext format version 0x%02x; expected 0x%02x. Ciphertexts produced by 1.x are not readable by 2.x.',
+                $version,
+                self::FORMAT_VERSION,
+            ));
+        }
+        $serializerFlag = \ord($binary[1]);
+
+        $nonce = substr($binary, 2, SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+        $box = substr($binary, 2 + SODIUM_CRYPTO_SECRETBOX_NONCEBYTES);
+
+        $secret = $this->deriveKey($userKey);
+
+        try {
+            $padded = sodium_crypto_secretbox_open($box, $nonce, $secret);
+            if ($padded === false) {
+                throw new EncryptionException(
+                    'Sodium decryption failed; ciphertext is corrupted or has been tampered with.',
+                );
+            }
+
+            try {
+                $payload = sodium_unpad($padded, $blocksize);
+            } catch (SodiumException $e) {
+                throw new EncryptionException('Sodium unpadding failed: ' . $e->getMessage(), 0, $e);
+            }
+
+            return $this->unserializePayload($payload, $serializerFlag);
+        } finally {
+            sodium_memzero($secret);
+        }
     }
 
+    /**
+     * Derive a {@see SODIUM_CRYPTO_SECRETBOX_KEYBYTES}-byte key from arbitrary
+     * user-supplied key material.
+     */
+    private function deriveKey(string $userKey): string
+    {
+        return sodium_crypto_generichash($userKey, '', SODIUM_CRYPTO_SECRETBOX_KEYBYTES);
+    }
+
+    /**
+     * @param array<string, mixed> $options
+     *
+     * @phpstan-param EncryptionOptions $options
+     *
+     * @throws EncryptionException
+     */
+    private function resolveBlocksize(array $options): int
+    {
+        $value = $options['blocksize'] ?? 16;
+        if (!\is_int($value) && !(\is_string($value) && ctype_digit($value))) {
+            throw new EncryptionException('The "blocksize" option must be a positive integer.');
+        }
+        $blocksize = (int) $value;
+        if ($blocksize < 1) {
+            throw new EncryptionException('The "blocksize" option must be a positive integer.');
+        }
+
+        return $blocksize;
+    }
 }

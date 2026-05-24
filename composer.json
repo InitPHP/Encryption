@@ -1,13 +1,19 @@
 {
     "name": "initphp/encryption",
-    "description": "PHP OpenSSL/Sodium Encryption and Decryption",
+    "description": "Secure, modern symmetric encryption for PHP built on top of OpenSSL and libsodium.",
     "type": "library",
     "license": "MIT",
-    "autoload": {
-        "psr-4": {
-            "InitPHP\\Encryption\\": "src/"
-        }
-    },
+    "keywords": [
+        "encryption",
+        "decryption",
+        "cryptography",
+        "openssl",
+        "sodium",
+        "libsodium",
+        "aes",
+        "security",
+        "initphp"
+    ],
     "authors": [
         {
             "name": "Muhammet ŞAFAK",
@@ -16,9 +22,65 @@
             "homepage": "https://www.muhammetsafak.com.tr"
         }
     ],
-    "minimum-stability": "stable",
+    "support": {
+        "issues": "https://github.com/InitPHP/Encryption/issues",
+        "source": "https://github.com/InitPHP/Encryption",
+        "security": "https://github.com/InitPHP/Encryption/security/policy"
+    },
     "require": {
-        "php": ">=7.4",
-        "ext-mbstring": "*"
+        "php": "^8.1"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10.5",
+        "phpstan/phpstan": "^1.11",
+        "friendsofphp/php-cs-fixer": "^3.59"
+    },
+    "suggest": {
+        "ext-openssl": "Required by the OpenSSL handler.",
+        "ext-sodium": "Required by the Sodium handler."
+    },
+    "autoload": {
+        "psr-4": {
+            "InitPHP\\Encryption\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "InitPHP\\Encryption\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit --colors=always",
+        "test-coverage": "phpunit --colors=always --coverage-html build/coverage --coverage-text",
+        "phpstan": "phpstan analyse --memory-limit=512M",
+        "cs-check": "php-cs-fixer fix --dry-run --diff",
+        "cs-fix": "php-cs-fixer fix",
+        "qa": [
+            "@cs-check",
+            "@phpstan",
+            "@test"
+        ]
+    },
+    "scripts-descriptions": {
+        "test": "Run the PHPUnit test suite.",
+        "test-coverage": "Run PHPUnit with HTML + text coverage reports.",
+        "phpstan": "Run PHPStan static analysis.",
+        "cs-check": "Check coding style (PSR-12) without changing files.",
+        "cs-fix": "Apply coding style fixes in place.",
+        "qa": "Run cs-check, phpstan and tests in sequence."
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true
+    },
+    "extra": {
+        "branch-alias": {
+            "dev-main": "2.x-dev",
+            "dev-2.x": "2.x-dev",
+            "dev-1.x": "1.x-dev"
+        }
     }
 }

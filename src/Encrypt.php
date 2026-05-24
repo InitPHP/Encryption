@@ -1,56 +1,58 @@
 <?php
-/**
- * Encrypt.php
- *
- * This file is part of InitPHP.
- *
- * @author     Muhammet ŞAFAK <info@muhammetsafak.com.tr>
- * @copyright  Copyright © 2022 InitPHP
- * @license    http://initphp.github.io/license.txt  MIT
- * @version    1.0
- * @link       https://www.muhammetsafak.com.tr
- */
 
 declare(strict_types=1);
 
 namespace InitPHP\Encryption;
 
-use \InitPHP\Encryption\Exceptions\EncryptionException;
+use InitPHP\Encryption\Exceptions\EncryptionException;
 
-use function is_string;
-use function class_exists;
-
-class Encrypt
+/**
+ * Convenience factory for handler instantiation.
+ *
+ * Accepts either a fully-qualified class name (which will be instantiated
+ * with the given options) or an already-constructed handler instance (whose
+ * options will be merged with the given overrides).
+ */
+final class Encrypt
 {
-
     /**
-     * @param string|HandlerInterface $handler
-     * @param array $options
-     * @return HandlerInterface
-     * @throws EncryptionException
+     * @template T of HandlerInterface
+     *
+     * @param class-string<T>|T    $handler Fully-qualified handler class name, or
+     *                                      an already-constructed handler instance.
+     * @param array<string, mixed> $options Options to apply on top of the handler's
+     *                                      defaults. Keys are case-insensitive.
+     *
+     * @return T
+     *
+     * @throws EncryptionException If the class name does not exist, the resulting
+     *                             object does not implement {@see HandlerInterface},
+     *                             or the handler's own constructor rejects the options.
      */
-    public static function use($handler, array $options = []): HandlerInterface
+    public static function use(string|HandlerInterface $handler, array $options = []): HandlerInterface
     {
-        if(is_string($handler) && class_exists($handler)){
-            $handler = new $handler($options);
-            $options = null;
+        if (\is_string($handler)) {
+            if (!class_exists($handler)) {
+                throw new EncryptionException(\sprintf('Handler class "%s" does not exist.', $handler));
+            }
+
+            $instance = new $handler($options);
+            if (!$instance instanceof HandlerInterface) {
+                throw new EncryptionException(\sprintf(
+                    'Handler class "%s" must implement %s.',
+                    $handler,
+                    HandlerInterface::class,
+                ));
+            }
+
+            /** @var T $instance */
+            return $instance;
         }
-        if(!($handler instanceof HandlerInterface)){
-            throw new EncryptionException('');
+
+        if ($options !== []) {
+            $handler->setOptions($options);
         }
-        return empty($options) ? $handler : $handler->setOptions($options);
+
+        return $handler;
     }
-
-    /**
-     * @param string|HandlerInterface $handler
-     * @param array $options
-     * @return HandlerInterface
-     * @throws EncryptionException
-     */
-    public static function create($handler, array $options = []): HandlerInterface
-    {
-        return self::use($handler, $options);
-    }
-
-
 }

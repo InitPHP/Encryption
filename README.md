@@ -2,6 +2,7 @@
 
 Secure, modern symmetric encryption for PHP on top of OpenSSL and libsodium.
 
+[![Designed & Maintained with Tan](https://www.muhammetsafak.com.tr/badges/designed-maintained-with-tan.svg)](https://www.muhammetsafak.com.tr/en/tan/)
 [![Latest Stable Version](https://poser.pugx.org/initphp/encryption/v)](https://packagist.org/packages/initphp/encryption)
 [![Total Downloads](https://poser.pugx.org/initphp/encryption/downloads)](https://packagist.org/packages/initphp/encryption)
 [![License](https://poser.pugx.org/initphp/encryption/license)](https://packagist.org/packages/initphp/encryption)

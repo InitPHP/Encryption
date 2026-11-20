@@ -18,7 +18,7 @@ Refer to that document for:
 - **Preferred channel:** GitHub Private Vulnerability Reporting on this
   repository's **Security** tab.
 - **Alternative channel:** Email
-  [info@muhammetsafak.com.tr](mailto:info@muhammetsafak.com.tr) with `SECURITY`
+  [info@muhammetsafak.com](mailto:info@muhammetsafak.com) with `SECURITY`
   in the subject line.
 
 ## Supported Versions

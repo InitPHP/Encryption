@@ -6,7 +6,7 @@ each entry tells you what's almost certainly going on and how to confirm.
 For the canonical, full list of every error message, see
 [Error Handling](Error-Handling.md).
 
-## "The 'openssl' extension is required by the OpenSSL handler."
+## The "openssl" extension is required by the OpenSSL handler.
 
 You constructed `InitPHP\Encryption\OpenSSL` on a PHP build without
 `ext-openssl` loaded.
@@ -30,7 +30,7 @@ check `php --ini` to see which `php.ini` is active and confirm `extension
 If you can't add the extension, switch to the [Sodium](Sodium-Handler.md)
 handler.
 
-## "The 'sodium' extension is required by the Sodium handler."
+## The "sodium" extension is required by the Sodium handler.
 
 Same story for `ext-sodium`. Sodium has been **part of PHP core since
 7.2**, so this is rare on modern installs. Confirm:
@@ -43,7 +43,7 @@ If `sodium` isn't there, your PHP build was compiled `--disable-sodium` or
 the binary distribution stripped it. Reinstall PHP with the extension
 enabled, or switch to OpenSSL.
 
-## "The 'key' option is required and must be a non-empty string."
+## The "key" option is required and must be a non-empty string.
 
 You called `encrypt()` (or `decrypt()`) on a handler that has no `key`
 configured, or `key` is `null`, `''`, or not a string.
@@ -62,7 +62,7 @@ configured, or `key` is `null`, `''`, or not a string.
 - Passing a non-string (e.g. an `int` accidentally cast through `(string)`
   somewhere).
 
-## "Unknown OpenSSL cipher '…'." / "Unknown HMAC hashing algorithm '…'."
+## Unknown OpenSSL cipher "…". / Unknown HMAC hashing algorithm "…".
 
 You passed a `cipher` or `algo` value the PHP build doesn't support.
 
@@ -154,7 +154,7 @@ $arr = $h->decrypt($ct);
 $user = new User($arr['name']);
 ```
 
-## "The 'blocksize' option must be a positive integer."
+## The "blocksize" option must be a positive integer.
 
 Sodium handler. You passed something other than a positive integer for
 `blocksize`.

@@ -32,7 +32,7 @@ API:
 
 ## Requirements
 
-- PHP **8.1** or higher
+- PHP **8.2** or higher
 - `ext-openssl` for the OpenSSL handler
 - `ext-sodium` for the Sodium handler
 
@@ -216,7 +216,7 @@ Notable messages you may see:
 
 Version 2.0 is a hard reset of the public surface and the on-wire format:
 
-- Minimum PHP version is now **8.1**.
+- Minimum PHP version is now **8.2**.
 - Ciphertexts produced by 1.x **cannot be decrypted by 2.x.** Plan a
   re-encryption migration before upgrading.
 - The default payload serializer is JSON (was `serialize`). Pass

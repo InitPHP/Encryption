@@ -2,38 +2,44 @@
 
 declare(strict_types=1);
 
-$finder = (new PhpCsFixer\Finder())
+/*
+ * Shared php-cs-fixer configuration for every InitPHP package (ADR-005).
+ *
+ * This file is identical in all repositories as `.php-cs-fixer.dist.php`.
+ * The only package-specific part is the two lines below; scripts/check-cs-config.sh
+ * ignores exactly those two lines when it compares a package with this template.
+ * Keep each of them on a single line.
+ */
+$excludeDirs = [];
+$excludePaths = [];
+
+$finder = PhpCsFixer\Finder::create()
     ->in([__DIR__ . '/src', __DIR__ . '/tests'])
-    ->name('*.php')
-    ->ignoreDotFiles(true)
-    ->ignoreVCS(true);
+    ->name('*.php');
+
+foreach ($excludeDirs as $excludeDir) {
+    $finder->exclude($excludeDir);
+}
+
+foreach ($excludePaths as $excludePath) {
+    $finder->notPath($excludePath);
+}
 
 return (new PhpCsFixer\Config())
-    ->setRiskyAllowed(true)
-    ->setFinder($finder)
-    ->setCacheFile(__DIR__ . '/.php-cs-fixer.cache')
+    ->setRiskyAllowed(false)
     ->setRules([
-        '@PSR12' => true,
-        '@PSR12:risky' => true,
-        'declare_strict_types' => true,
+        '@PER-CS' => true,
+        '@PHP8x2Migration' => true,
         'array_syntax' => ['syntax' => 'short'],
-        'ordered_imports' => [
-            'sort_algorithm' => 'alpha',
-            'imports_order' => ['class', 'function', 'const'],
-        ],
         'no_unused_imports' => true,
-        'single_quote' => true,
-        'trailing_comma_in_multiline' => ['elements' => ['arrays', 'arguments', 'parameters']],
-        'no_trailing_whitespace' => true,
-        'no_whitespace_in_blank_line' => true,
-        'no_extra_blank_lines' => ['tokens' => ['extra', 'throw', 'use']],
-        'blank_line_after_opening_tag' => true,
-        'blank_line_before_statement' => ['statements' => ['return', 'throw', 'try']],
-        'cast_spaces' => ['space' => 'single'],
-        'concat_space' => ['spacing' => 'one'],
-        'native_function_invocation' => [
-            'include' => ['@compiler_optimized'],
-            'scope' => 'namespaced',
-            'strict' => true,
+        'ordered_imports' => [
+            'imports_order' => ['class', 'function', 'const'],
+            'sort_algorithm' => 'alpha',
         ],
-    ]);
+        'single_quote' => true,
+        'trailing_comma_in_multiline' => [
+            'elements' => ['arguments', 'array_destructuring', 'arrays', 'match', 'parameters'],
+        ],
+    ])
+    ->setFinder($finder)
+    ->setCacheFile(__DIR__ . '/build/php-cs-fixer.cache');

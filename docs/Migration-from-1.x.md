@@ -29,10 +29,10 @@ need a re-encryption plan before you upgrade.
 
 | | 1.x | 2.x |
 | --- | --- | --- |
-| PHP | `>=7.4` | `^8.2` |
+| PHP | `>=7.4` | `^8.1` in 2.x; `^8.2` from 3.0.0 |
 
 The 2.x source uses `mixed`, `static` return types and `match`. The 2.0.0
-release required PHP 8.1; the current line requires PHP 8.2 (see the
+release required PHP 8.1; version 3.0.0 requires PHP 8.2 (see the
 [changelog](https://github.com/InitPHP/Encryption/blob/main/CHANGELOG.md)).
 
 ### Ciphertext format

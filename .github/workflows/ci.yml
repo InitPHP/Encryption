@@ -97,7 +97,7 @@ jobs:
           php-version: '8.3'
           extensions: openssl, sodium
           coverage: none
-          tools: composer:v2, php-cs-fixer
+          tools: composer:v2
 
       - name: Install dependencies
         run: composer update --no-interaction --no-progress --prefer-dist

@@ -29,12 +29,9 @@ produced by 1.x cannot be decrypted by 2.x and vice versa. See
   `cs-fix`, `qa`.
 - Package-level `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`.
 
-### Changed
-
-- **BREAKING:** Minimum PHP version raised to `^8.1`.
-
 ### Changed (breaking)
 
+- **BREAKING:** Minimum PHP version raised to `^8.1`.
 - **BREAKING:** New self-describing ciphertext format (versioned header) — v1
   ciphertexts will not be readable by 2.x.
 - **BREAKING:** Default payload serialization switches from `serialize()`/

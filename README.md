@@ -227,7 +227,7 @@ Version 2.0 is a hard reset of the public surface and the on-wire format:
 - `ext-mbstring` is no longer required.
 
 A full migration walk-through lives in
-[`docs/08-migration-v1-to-v2.md`](./docs/08-migration-v1-to-v2.md) (shipped
+[`docs/Migration-from-1.x.md`](./docs/Migration-from-1.x.md) (shipped
 with the package; see also the [docs/](./docs/) index).
 
 ## Contributing

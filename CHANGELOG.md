@@ -5,7 +5,7 @@ All notable changes to `initphp/encryption` will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [3.0.0] - 2026-11-22
 
 ### Changed
 
@@ -15,14 +15,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   PHP-CS-Fixer configuration (`.php-cs-fixer.dist.php`). The source was
   reformatted accordingly; there are no behaviour changes.
 
-### Planned for 2.0.0
+## [2.0.0] - 2026-05-24
 
-This is the first development entry of the upcoming 2.0 release. The 2.x line is
-a deliberate hard reset of the public surface; ciphertexts produced by 1.x cannot
-be decrypted by 2.x and vice versa. A migration guide will ship with the final
-release.
+The 2.x line is a deliberate hard reset of the public surface; ciphertexts
+produced by 1.x cannot be decrypted by 2.x and vice versa. See
+[`docs/Migration-from-1.x.md`](./docs/Migration-from-1.x.md) for the migration guide.
 
-#### Added
+### Added
 
 - Tooling: PHPUnit 10, PHPStan level 8, PHP-CS-Fixer (PSR-12), GitHub Actions CI
   matrix across PHP 8.1–8.4, `composer audit` workflow.
@@ -30,12 +29,9 @@ release.
   `cs-fix`, `qa`.
 - Package-level `CONTRIBUTING.md`, `SECURITY.md`, `CHANGELOG.md`.
 
-#### Changed
+### Changed (breaking)
 
 - **BREAKING:** Minimum PHP version raised to `^8.1`.
-
-#### To be done (tracked, not yet shipped)
-
 - **BREAKING:** New self-describing ciphertext format (versioned header) — v1
   ciphertexts will not be readable by 2.x.
 - **BREAKING:** Default payload serialization switches from `serialize()`/

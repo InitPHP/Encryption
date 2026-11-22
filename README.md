@@ -32,7 +32,7 @@ API:
 
 ## Requirements
 
-- PHP **8.1** or higher
+- PHP **8.2** or higher
 - `ext-openssl` for the OpenSSL handler
 - `ext-sodium` for the Sodium handler
 

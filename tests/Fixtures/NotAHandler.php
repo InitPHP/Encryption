@@ -14,7 +14,5 @@ final class NotAHandler
     /**
      * @param array<string, mixed> $options
      */
-    public function __construct(public readonly array $options = [])
-    {
-    }
+    public function __construct(public readonly array $options = []) {}
 }

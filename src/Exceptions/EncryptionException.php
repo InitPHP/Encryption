@@ -14,6 +14,4 @@ use RuntimeException;
  * Catching this exception is sufficient to handle every error path the
  * library can produce.
  */
-class EncryptionException extends RuntimeException
-{
-}
+class EncryptionException extends RuntimeException {}

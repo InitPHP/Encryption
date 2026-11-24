@@ -23,12 +23,17 @@ request.
 function setSessionCookie(string $name, array $payload, string $key): void
 {
     $handler = Encrypt::use(Sodium::class, ['key' => $key]);
+    $expires = time() + 86400;
+    // The expiry goes *inside* the encrypted payload: the cookie's own "expires"
+    // is only a hint to the browser, so a stolen cookie value would otherwise
+    // stay valid for as long as the key does. A caller-supplied "exp" is ignored.
+    $payload = ['exp' => $expires] + $payload;
     setcookie($name, $handler->encrypt($payload), [
         'httponly' => true,
         'secure'   => true,
         'samesite' => 'Strict',
         'path'     => '/',
-        'expires'  => time() + 86400,
+        'expires'  => $expires,
     ]);
 }
 
@@ -40,7 +45,10 @@ function readSessionCookie(string $name, string $key): ?array
     try {
         $payload = Encrypt::use(Sodium::class, ['key' => $key])
             ->decrypt($_COOKIE[$name]);
-        return is_array($payload) ? $payload : null;
+        if (!is_array($payload) || (int) ($payload['exp'] ?? 0) < time()) {
+            return null; // not a session payload, or expired server-side
+        }
+        return $payload;
     } catch (EncryptionException) {
         // tampered or stale cookie — treat as no session
         return null;
@@ -54,6 +62,14 @@ $payload = readSessionCookie('app_session', getenv('APP_KEY'));
 
 The `try` / `catch` is the important bit — a tampered cookie should
 silently drop you back to "no session" rather than surface a server error.
+
+The `exp` check matters just as much: the package does not expire ciphertexts
+(see [#3](#3-encrypted-url-token)), so without it a copied cookie value keeps
+working after logout and after the browser has dropped the cookie, until
+`APP_KEY` is rotated. This is stateless: the cookie cannot be revoked before
+`exp`. If you need logout or "sign out everywhere" to take effect immediately,
+keep a server-side record (a session id or a revocation list) and check it on
+every request.
 
 ## 2. Encrypted Database Column
 

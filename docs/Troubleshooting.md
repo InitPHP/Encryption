@@ -215,7 +215,7 @@ real causes:
 
 ## "It worked on 8.2, fails on 8.5 (or vice versa)"
 
-Should not happen — the CI matrix runs the suite on 8.2, 8.3, 8.4 and 8.5.
+Should not happen — the CI matrix runs the suite on 8.2, 8.3, 8.4, 8.5 and 8.6.
 If you have a reproducer, please [open an issue](https://github.com/InitPHP/Encryption/issues/new)
 with the PHP version, the ciphertext bytes, and your handler
 construction.
